@@ -3,6 +3,7 @@ using System.ComponentModel;
 using System.Text;
 using System.Windows.Forms;
 using Kvaser.CanLib;
+using static Kvaser.CanLib.Canlib;
 
 namespace CANFD_KVASER_EXAMPLE
 {
@@ -10,7 +11,8 @@ namespace CANFD_KVASER_EXAMPLE
     {
         const long TIMEOUT  = 1000;
         int canHandle;
-        BackgroundWorker worker;
+        Canlib.canStatus canStatus;
+        //BackgroundWorker worker;
         struct CANMessage
         {
             public int id, dlc, flag;
@@ -21,21 +23,22 @@ namespace CANFD_KVASER_EXAMPLE
         {
             InitializeComponent();
             //CANStart();
-            worker = new BackgroundWorker();
-            worker.WorkerSupportsCancellation = true; // 취소 지원 설정
-            worker.DoWork += Worker_DoWork;
-            worker.RunWorkerCompleted += Worker_RunWorkerCompleted;
+            //worker = new BackgroundWorker();
+            //worker.WorkerSupportsCancellation = true; // 취소 지원 설정
+            
+            //worker.RunWorkerCompleted += Worker_RunWorkerCompleted;
         }
-        private void Worker_DoWork(object sender, DoWorkEventArgs e)
-        {
-            CANStart();
-        }
+       // private void Worker_DoWork(object sender, DoWorkEventArgs e)
+        //{
+       //     CANRead();
+        //}
+        /*
         private void Worker_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
         {
             if (e.Cancelled)
             {
                 // 취소된 경우 처리
-                Canlib.canBusOff(canHandle);
+                CANStop();
                 button1.Text = "START";
             }
             else if (e.Error != null)
@@ -43,32 +46,21 @@ namespace CANFD_KVASER_EXAMPLE
                 MessageBox.Show(e.Error.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
-
+        */
         public void CANStart()
         {
-            CANMessage msg = new CANMessage();
-            msg.data = new byte[64];
+            
             Canlib.canInitializeLibrary();
             int canHandle = Canlib.canOpenChannel(0, Canlib.canOPEN_CAN_FD );
-            Canlib.canStatus canStatus = Canlib.canSetBusParams(canHandle, Canlib.canFD_BITRATE_500K_80P, 63, 16, 16, 1);
+            canStatus canStatus = Canlib.canSetBusParams(canHandle, Canlib.canFD_BITRATE_500K_80P, 63, 16, 16, 1);
             Canlib.canStatus canDataPhaseStatus = Canlib.canSetBusParamsFd(canHandle, Canlib.canFD_BITRATE_1M_80P, 31, 8, 8);
-
             Canlib.canBusOn(canHandle);
-            string header = "Time           |   Id      | CAN_DL | Data ";
-            DataView.Invoke((MethodInvoker)delegate { DataView.AppendText(header); });
-            Console.WriteLine(header);
-            while (true)
-            {
-                canStatus = Canlib.canReadWait(canHandle, out msg.id, msg.data, out msg.dlc, out msg.flag, out msg.time, TIMEOUT);
-                if (msg.dlc != 0)
-                {
-                    DisplayMessage(msg.id, msg.dlc, msg.data, msg.flag, msg.time);
-                }
-                else
-                {
-                    break;
-                }
-            }
+        }
+        public void CANStop()
+        {
+            Canlib.canBusOff(canHandle);
+            Canlib.canClose(canHandle);
+            Canlib.canUnloadLibrary();
         }
         private void DisplayMessage(int id, int dlc, byte[] data, int flags, double time)
         {
@@ -84,7 +76,8 @@ namespace CANFD_KVASER_EXAMPLE
             }
             sb.AppendLine();
             string result = sb.ToString();
-            DataView.Invoke((MethodInvoker)delegate { DataView.AppendText(result); });
+            //DataView.Invoke((MethodInvoker)delegate { DataView.AppendText(result); });
+            DataView.AppendText(result);
             Console.WriteLine(result);
             if ((flags & Canlib.canMSGERR_OVERRUN) > 0)
             {
@@ -100,17 +93,35 @@ namespace CANFD_KVASER_EXAMPLE
         {
             if(button1.Text.Equals("STOP"))
             {
-                worker.CancelAsync();
-                Canlib.canBusOff(canHandle);
+                CANStop();
+                
+                MsgTimer.Stop();
+               // worker.DoWork += Worker_DoWork;
                 button1.Text = "START";
             }
             else
             {
-                Canlib.canBusOn(canHandle);
-                worker.RunWorkerAsync();
+                CANStart();
+                MsgTimer.Start();
+              //  worker.DoWork -= Worker_DoWork;
                 button1.Text = "STOP";
             }
             
+        }
+
+        private void MsgTimer_Tick(object sender, EventArgs e)
+        {
+            CANMessage msg = new CANMessage();
+            msg.data = new byte[64];
+            string header = "Time           |   Id      | CAN_DL | Data ";
+            //DataView.Invoke((MethodInvoker)delegate { DataView.AppendText(header); });
+            DataView.AppendText(header);
+            Console.WriteLine(header);
+            canStatus = Canlib.canReadWait(canHandle, out msg.id, msg.data, out msg.dlc, out msg.flag, out msg.time, TIMEOUT);
+            if (msg.dlc != 0)
+            {
+                DisplayMessage(msg.id, msg.dlc, msg.data, msg.flag, msg.time);
+            }
         }
     }
 }

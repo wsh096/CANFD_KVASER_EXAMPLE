@@ -28,21 +28,23 @@
         /// </summary>
         private void InitializeComponent()
         {
+            this.components = new System.ComponentModel.Container();
             this.DataView = new System.Windows.Forms.RichTextBox();
             this.button1 = new System.Windows.Forms.Button();
+            this.MsgTimer = new System.Windows.Forms.Timer(this.components);
             this.SuspendLayout();
             // 
             // DataView
             // 
             this.DataView.Location = new System.Drawing.Point(0, 12);
             this.DataView.Name = "DataView";
-            this.DataView.Size = new System.Drawing.Size(1223, 526);
+            this.DataView.Size = new System.Drawing.Size(1481, 526);
             this.DataView.TabIndex = 0;
             this.DataView.Text = "";
             // 
             // button1
             // 
-            this.button1.Location = new System.Drawing.Point(1229, 12);
+            this.button1.Location = new System.Drawing.Point(1487, 12);
             this.button1.Name = "button1";
             this.button1.Size = new System.Drawing.Size(75, 23);
             this.button1.TabIndex = 1;
@@ -50,11 +52,16 @@
             this.button1.UseVisualStyleBackColor = true;
             this.button1.Click += new System.EventHandler(this.button1_Click);
             // 
+            // MsgTimer
+            // 
+            this.MsgTimer.Interval = 5;
+            this.MsgTimer.Tick += new System.EventHandler(this.MsgTimer_Tick);
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 15F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(1300, 550);
+            this.ClientSize = new System.Drawing.Size(1574, 550);
             this.Controls.Add(this.button1);
             this.Controls.Add(this.DataView);
             this.Name = "Form1";
@@ -67,6 +74,7 @@
 
         private System.Windows.Forms.RichTextBox DataView;
         private System.Windows.Forms.Button button1;
+        private System.Windows.Forms.Timer MsgTimer;
     }
 }
 
